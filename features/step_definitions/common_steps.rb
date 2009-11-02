@@ -100,7 +100,7 @@ When /^I order by "([^\"]+)"$/ do |str|
   @options[:order] = str
 end
 
-When /^I search on index (\w+)$/ do |index|
+When /^I use index (\w+)$/ do |index|
   @results = nil
   @options[:index] = index
 end
@@ -158,6 +158,10 @@ end
 
 Then /^I should get (\d+) results?$/ do |count|
   results.length.should == count.to_i
+end
+
+Then /^I should get more than (\d+) results?$/ do |count|
+  results.length.should > count.to_i
 end
 
 Then /^I should not get (\d+) results?$/ do |count|

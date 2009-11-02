@@ -76,6 +76,9 @@ module ThinkingSphinx
 
             self.sphinx_indexes ||= []
             self.sphinx_facets  ||= []
+
+            delta_index_exists = sphinx_indexes.any? { |i| i.delta? }
+
             index = ThinkingSphinx::Index::Builder.generate(self, &block)
 
             self.sphinx_indexes << index
@@ -83,16 +86,21 @@ module ThinkingSphinx
               ThinkingSphinx.indexed_models << self.name
             end
 
-            if index.delta?
+            # Add delta Hooks just once
+            if index.delta? && !delta_index_exists
               before_save   :toggle_delta
               after_commit  :index_delta
             end
 
-            after_destroy :toggle_deleted
+            # add deleted hook and includes just once
+            if sphinx_indexes.length == 1
 
-            include ThinkingSphinx::SearchMethods
-            include ThinkingSphinx::ActiveRecord::AttributeUpdates
-            include ThinkingSphinx::ActiveRecord::Scopes
+              after_destroy :toggle_deleted
+
+              include ThinkingSphinx::SearchMethods
+              include ThinkingSphinx::ActiveRecord::AttributeUpdates
+              include ThinkingSphinx::ActiveRecord::Scopes
+            end
 
             index
 
@@ -142,7 +150,7 @@ module ThinkingSphinx
           def to_riddle(offset)
             sphinx_database_adapter.setup
 
-            self.sphinx_indexes.select do |ts_index|
+            sphinx_indexes.select do |ts_index|
               ts_index.model == self
             end.inject([]) do |indexes,ts_index|
               indexes += ts_index.to_riddle(offset)
@@ -159,10 +167,29 @@ module ThinkingSphinx
           end
 
           def sphinx_index_names
-            klass = source_of_sphinx_index
-            klass.sphinx_indexes.inject([]) do |names,ts_index|
+            sphinx_indexes.inject([]) do |names,ts_index|
               names += ts_index.all_index_names
             end
+          end
+
+          def sphinx_delta_indexes
+            sphinx_indexes.select{|i| i.delta?}
+          end
+
+          def delete_in_index(index_name, document_id)
+            return unless in_index?(index_name,document_id)
+            config = ThinkingSphinx::Configuration.instance
+            client = Riddle::Client.new config.address, config.port
+
+            client.update(index_name,
+                          ['sphinx_deleted'],
+                          {document_id => 1}
+                          )
+
+          end
+
+          def in_index?(index_name,document_id)
+            search_for_id(document_id, index_name)
           end
 
         end
@@ -178,42 +205,19 @@ module ThinkingSphinx
       )
     end
 
-    def in_index?(suffix)
-      self.class.search_for_id self.sphinx_document_id, sphinx_index_name(suffix)
-    end
-
-    def in_core_index?
-      in_index? "core"
-    end
-
-    def in_delta_index?
-      in_index? "delta"
-    end
-
-    def in_both_indexes?
-      in_core_index? && in_delta_index?
-    end
-
     def toggle_deleted
       return unless ThinkingSphinx.updates_enabled? && ThinkingSphinx.sphinx_running?
 
-      config = ThinkingSphinx::Configuration.instance
-      client = Riddle::Client.new config.address, config.port
-
-      client.update(
-        "#{self.class.sphinx_indexes.first.name}_core",
-        ['sphinx_deleted'],
-        {self.sphinx_document_id => 1}
-      ) if self.in_core_index?
-
-      client.update(
-        "#{self.class.sphinx_indexes.first.name}_delta",
-        ['sphinx_deleted'],
-        {self.sphinx_document_id => 1}
-      ) if self.class.sphinx_indexes.any? { |index| index.delta? } &&
-        self.toggled_delta?
+      self.class.sphinx_indexes.each do |index|
+        delete_in_index("#{index.name}_core")
+        delete_in_index("#{index.name}_delta") if index.delta?
+      end
     rescue ::ThinkingSphinx::ConnectionError
       # nothing
+    end
+
+    def delete_in_index(index_name)
+      self.class.delete_in_index(index_name,sphinx_document_id)
     end
 
     # Returns the unique integer id for the object. This method uses the
@@ -231,10 +235,5 @@ module ThinkingSphinx
         ThinkingSphinx.indexed_models.index(self.class.source_of_sphinx_index.name)
     end
 
-    private
-
-    def sphinx_index_name(suffix)
-      "#{self.class.source_of_sphinx_index.name.underscore.tr(':/\\', '_')}_#{suffix}"
-    end
   end
 end
