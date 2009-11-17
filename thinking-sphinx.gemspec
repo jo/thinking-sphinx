@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = %q{thinking-sphinx}
-  s.version = "1.2.13"
+  s.version = "1.3.4"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Pat Allan"]
-  s.date = %q{2009-11-01}
+  s.date = %q{2009-11-16}
   s.description = %q{A concise and easy-to-use Ruby library that connects ActiveRecord to the Sphinx search daemon, managing configuration, indexing and searching.}
   s.email = %q{pat@freelancing-gods.com}
   s.extra_rdoc_files = [
@@ -19,9 +19,12 @@ Gem::Specification.new do |s|
     "LICENCE",
      "README.textile",
      "VERSION.yml",
+     "lib/cucumber/thinking_sphinx/external_world.rb",
      "lib/cucumber/thinking_sphinx/internal_world.rb",
      "lib/cucumber/thinking_sphinx/sql_logger.rb",
      "lib/thinking_sphinx.rb",
+     "lib/thinking_sphinx/0.9.8.rb",
+     "lib/thinking_sphinx/0.9.9.rb",
      "lib/thinking_sphinx/active_record.rb",
      "lib/thinking_sphinx/active_record/attribute_updates.rb",
      "lib/thinking_sphinx/active_record/delta.rb",
@@ -37,12 +40,7 @@ Gem::Specification.new do |s|
      "lib/thinking_sphinx/core/array.rb",
      "lib/thinking_sphinx/core/string.rb",
      "lib/thinking_sphinx/deltas.rb",
-     "lib/thinking_sphinx/deltas/datetime_delta.rb",
      "lib/thinking_sphinx/deltas/default_delta.rb",
-     "lib/thinking_sphinx/deltas/delayed_delta.rb",
-     "lib/thinking_sphinx/deltas/delayed_delta/delta_job.rb",
-     "lib/thinking_sphinx/deltas/delayed_delta/flag_as_deleted_job.rb",
-     "lib/thinking_sphinx/deltas/delayed_delta/job.rb",
      "lib/thinking_sphinx/deploy/capistrano.rb",
      "lib/thinking_sphinx/excerpter.rb",
      "lib/thinking_sphinx/facet.rb",
@@ -59,55 +57,15 @@ Gem::Specification.new do |s|
      "lib/thinking_sphinx/source/internal_properties.rb",
      "lib/thinking_sphinx/source/sql.rb",
      "lib/thinking_sphinx/tasks.rb",
+     "lib/thinking_sphinx/test.rb",
      "rails/init.rb",
      "tasks/distribution.rb",
      "tasks/rails.rake",
-     "tasks/testing.rb",
-     "vendor/after_commit/LICENSE",
-     "vendor/after_commit/README",
-     "vendor/after_commit/Rakefile",
-     "vendor/after_commit/init.rb",
-     "vendor/after_commit/lib/after_commit.rb",
-     "vendor/after_commit/lib/after_commit/active_record.rb",
-     "vendor/after_commit/lib/after_commit/connection_adapters.rb",
-     "vendor/after_commit/test/after_commit_test.rb",
-     "vendor/delayed_job/lib/delayed/job.rb",
-     "vendor/delayed_job/lib/delayed/message_sending.rb",
-     "vendor/delayed_job/lib/delayed/performable_method.rb",
-     "vendor/delayed_job/lib/delayed/worker.rb",
-     "vendor/riddle/lib/riddle.rb",
-     "vendor/riddle/lib/riddle/client.rb",
-     "vendor/riddle/lib/riddle/client/filter.rb",
-     "vendor/riddle/lib/riddle/client/message.rb",
-     "vendor/riddle/lib/riddle/client/response.rb",
-     "vendor/riddle/lib/riddle/configuration.rb",
-     "vendor/riddle/lib/riddle/configuration/distributed_index.rb",
-     "vendor/riddle/lib/riddle/configuration/index.rb",
-     "vendor/riddle/lib/riddle/configuration/indexer.rb",
-     "vendor/riddle/lib/riddle/configuration/remote_index.rb",
-     "vendor/riddle/lib/riddle/configuration/searchd.rb",
-     "vendor/riddle/lib/riddle/configuration/section.rb",
-     "vendor/riddle/lib/riddle/configuration/source.rb",
-     "vendor/riddle/lib/riddle/configuration/sql_source.rb",
-     "vendor/riddle/lib/riddle/configuration/xml_source.rb",
-     "vendor/riddle/lib/riddle/controller.rb"
+     "tasks/testing.rb"
   ]
   s.homepage = %q{http://ts.freelancing-gods.com}
-  s.post_install_message = %q{With the release of Thinking Sphinx 1.1.18, there is one important change to
-note: previously, the default morphology for indexing was 'stem_en'. The new
-default is nil, to avoid any unexpected behavior. If you wish to keep the old
-value though, you will need to add the following settings to your
-config/sphinx.yml file:
-
-development:
-  morphology: stem_en
-test:
-  morphology: stem_en
-production:
-  morphology: stem_en
-
-To understand morphologies/stemmers better, visit the following link:
-http://www.sphinxsearch.com/docs/manual-0.9.8.html#conf-morphology
+  s.post_install_message = %q{If you're upgrading, you should read this:
+http://freelancing-god.github.com/ts/en/upgrading.html
 
 }
   s.rdoc_options = ["--charset=UTF-8"]
@@ -118,8 +76,6 @@ http://www.sphinxsearch.com/docs/manual-0.9.8.html#conf-morphology
     "features/alternate_primary_key.feature",
      "features/attribute_transformation.feature",
      "features/attribute_updates.feature",
-     "features/datetime_deltas.feature",
-     "features/delayed_delta_indexing.feature",
      "features/deleting_instances.feature",
      "features/direct_attributes.feature",
      "features/excerpts.feature",
@@ -137,8 +93,6 @@ http://www.sphinxsearch.com/docs/manual-0.9.8.html#conf-morphology
      "features/step_definitions/alpha_steps.rb",
      "features/step_definitions/beta_steps.rb",
      "features/step_definitions/common_steps.rb",
-     "features/step_definitions/datetime_delta_steps.rb",
-     "features/step_definitions/delayed_delta_indexing_steps.rb",
      "features/step_definitions/extensible_delta_indexing_steps.rb",
      "features/step_definitions/facet_steps.rb",
      "features/step_definitions/find_arguments_steps.rb",
@@ -161,7 +115,6 @@ http://www.sphinxsearch.com/docs/manual-0.9.8.html#conf-morphology
      "features/support/db/fixtures/categories.rb",
      "features/support/db/fixtures/cats.rb",
      "features/support/db/fixtures/comments.rb",
-     "features/support/db/fixtures/delayed_betas.rb",
      "features/support/db/fixtures/developers.rb",
      "features/support/db/fixtures/dogs.rb",
      "features/support/db/fixtures/extensible_betas.rb",
@@ -170,7 +123,6 @@ http://www.sphinxsearch.com/docs/manual-0.9.8.html#conf-morphology
      "features/support/db/fixtures/posts.rb",
      "features/support/db/fixtures/robots.rb",
      "features/support/db/fixtures/tags.rb",
-     "features/support/db/fixtures/thetas.rb",
      "features/support/db/migrations",
      "features/support/db/migrations/create_alphas.rb",
      "features/support/db/migrations/create_animals.rb",
@@ -180,7 +132,6 @@ http://www.sphinxsearch.com/docs/manual-0.9.8.html#conf-morphology
      "features/support/db/migrations/create_boxes.rb",
      "features/support/db/migrations/create_categories.rb",
      "features/support/db/migrations/create_comments.rb",
-     "features/support/db/migrations/create_delayed_betas.rb",
      "features/support/db/migrations/create_developers.rb",
      "features/support/db/migrations/create_extensible_betas.rb",
      "features/support/db/migrations/create_gammas.rb",
@@ -189,7 +140,6 @@ http://www.sphinxsearch.com/docs/manual-0.9.8.html#conf-morphology
      "features/support/db/migrations/create_robots.rb",
      "features/support/db/migrations/create_taggings.rb",
      "features/support/db/migrations/create_tags.rb",
-     "features/support/db/migrations/create_thetas.rb",
      "features/support/db/mysql.rb",
      "features/support/db/postgresql.rb",
      "features/support/env.rb",
@@ -204,7 +154,6 @@ http://www.sphinxsearch.com/docs/manual-0.9.8.html#conf-morphology
      "features/support/models/cat.rb",
      "features/support/models/category.rb",
      "features/support/models/comment.rb",
-     "features/support/models/delayed_beta.rb",
      "features/support/models/developer.rb",
      "features/support/models/dog.rb",
      "features/support/models/extensible_beta.rb",
@@ -214,7 +163,6 @@ http://www.sphinxsearch.com/docs/manual-0.9.8.html#conf-morphology
      "features/support/models/robot.rb",
      "features/support/models/tag.rb",
      "features/support/models/tagging.rb",
-     "features/support/models/theta.rb",
      "features/support/post_database.rb",
      "spec/lib/thinking_sphinx/active_record/delta_spec.rb",
      "spec/lib/thinking_sphinx/active_record/has_many_association_spec.rb",
@@ -225,7 +173,6 @@ http://www.sphinxsearch.com/docs/manual-0.9.8.html#conf-morphology
      "spec/lib/thinking_sphinx/configuration_spec.rb",
      "spec/lib/thinking_sphinx/core/array_spec.rb",
      "spec/lib/thinking_sphinx/core/string_spec.rb",
-     "spec/lib/thinking_sphinx/deltas/job_spec.rb",
      "spec/lib/thinking_sphinx/excerpter_spec.rb",
      "spec/lib/thinking_sphinx/facet_search_spec.rb",
      "spec/lib/thinking_sphinx/facet_spec.rb",
@@ -246,11 +193,17 @@ http://www.sphinxsearch.com/docs/manual-0.9.8.html#conf-morphology
 
     if Gem::Version.new(Gem::RubyGemsVersion) >= Gem::Version.new('1.2.0') then
       s.add_runtime_dependency(%q<activerecord>, [">= 1.15.6"])
+      s.add_runtime_dependency(%q<riddle>, [">= 1.0.1"])
+      s.add_runtime_dependency(%q<after_commit>, [">= 1.0.2"])
     else
       s.add_dependency(%q<activerecord>, [">= 1.15.6"])
+      s.add_dependency(%q<riddle>, [">= 1.0.1"])
+      s.add_dependency(%q<after_commit>, [">= 1.0.2"])
     end
   else
     s.add_dependency(%q<activerecord>, [">= 1.15.6"])
+    s.add_dependency(%q<riddle>, [">= 1.0.1"])
+    s.add_dependency(%q<after_commit>, [">= 1.0.2"])
   end
 end
 

@@ -1,11 +1,15 @@
 $:.unshift File.dirname(__FILE__) + '/../lib'
+Dir[File.join(File.dirname(__FILE__), '../vendor/*/lib')].each do |path|
+  $:.unshift path
+end
 
 require 'rubygems'
 require 'fileutils'
 require 'ginger'
 require 'jeweler'
 
-require 'lib/thinking_sphinx'
+SphinxVersion = ENV['VERSION'] || '0.9.8'
+require "lib/thinking_sphinx/#{SphinxVersion}"
 
 require 'will_paginate'
 

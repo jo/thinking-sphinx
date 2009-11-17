@@ -14,7 +14,7 @@ module ThinkingSphinx
       kind_of? member? method methods nil? object_id respond_to? send should
       type )
     SafeMethods = %w( partition private_methods protected_methods
-      public_methods send )
+      public_methods send class )
     
     instance_methods.select { |method|
       method.to_s[/^__/].nil? && !CoreMethods.include?(method.to_s)
@@ -155,6 +155,8 @@ module ThinkingSphinx
     # 
     def total_pages
       populate
+      return 0 if @results[:total].nil?
+      
       @total_pages ||= (@results[:total] / per_page.to_f).ceil
     end
     # Compatibility with older versions of will_paginate
@@ -215,6 +217,7 @@ module ThinkingSphinx
     end
     
     def search(*args)
+      add_default_scope
       merge_search ThinkingSphinx::Search.new(*args)
       self
     end
@@ -231,8 +234,12 @@ module ThinkingSphinx
       
       retry_on_stale_index do
         begin
-          log "Querying Sphinx: #{query}"
-          @results = client.query query, indexes, comment
+          log "Querying: '#{query}'"
+          runtime = Benchmark.realtime {
+            @results = client.query query, indexes, comment
+          }
+          log "Found #{@results[:total_found]} results", :debug,
+            "Sphinx (#{sprintf("%f", runtime)}s)"
         rescue Errno::ECONNREFUSED => err
           raise ThinkingSphinx::ConnectionError,
             'Connection to Sphinx Daemon (searchd) failed.'
@@ -280,13 +287,16 @@ module ThinkingSphinx
       end
     end
     
-    def self.log(message, method = :debug)
+    def self.log(message, method = :debug, identifier = 'Sphinx')
       return if ::ActiveRecord::Base.logger.nil?
-      ::ActiveRecord::Base.logger.send method, message
+      identifier_color, message_color = "4;32;1", "0" # 0;1 = Bold
+      info = "  \e[#{identifier_color}m#{identifier}\e[0m   "
+      info << "\e[#{message_color}m#{message}\e[0m"
+      ::ActiveRecord::Base.logger.send method, info
     end
     
-    def log(message, method = :debug)
-      self.class.log(message, method)
+    def log(*args)
+      self.class.log(*args)
     end
     
     def client
@@ -682,6 +692,11 @@ MSG
     
     def is_scope?(method)
       one_class && one_class.sphinx_scopes.include?(method)
+    end
+    
+    # Adds the default_sphinx_scope if set.
+    def add_default_scope
+      add_scope(one_class.get_default_sphinx_scope) if one_class && one_class.has_default_sphinx_scope?
     end
     
     def add_scope(method, *args, &block)

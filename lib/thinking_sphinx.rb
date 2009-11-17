@@ -1,9 +1,4 @@
-Dir[File.join(File.dirname(__FILE__), '../vendor/*/lib')].each do |path|
-  $LOAD_PATH.unshift path
-end
-
 require 'active_record'
-require 'riddle'
 require 'after_commit'
 require 'yaml'
 require 'cgi'
