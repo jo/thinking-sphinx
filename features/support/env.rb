@@ -6,6 +6,10 @@ require 'ginger'
 require 'will_paginate'
 require 'active_record'
 
+Dir[File.join(File.dirname(__FILE__), '../../vendor/*/lib')].each do |path|
+  $:.unshift path
+end
+
 $:.unshift File.dirname(__FILE__) + '/../../lib'
 
 require 'cucumber/thinking_sphinx/internal_world'
