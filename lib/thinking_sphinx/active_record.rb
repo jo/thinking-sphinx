@@ -12,6 +12,7 @@ module ThinkingSphinx
     def self.included(base)
       base.class_eval do
         class_inheritable_array :sphinx_indexes, :sphinx_facets
+        attr_accessor :search
         class << self
 
           def set_sphinx_primary_key(attribute)
