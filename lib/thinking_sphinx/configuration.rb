@@ -244,6 +244,12 @@ module ThinkingSphinx
         end
       end
     end
+
+    # set a platform dependent bin_path
+    # RUBY_PLATFORM/bin will be appendet
+    def platform_dependent_bin_path=(path) 
+      self.bin_path = File.join(path, RUBY_PLATFORM, "bin") 
+    end 
     
     private
     
